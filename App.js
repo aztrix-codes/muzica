@@ -92,7 +92,7 @@ const HeaderRight = () => {
       
       navigation.navigate('Player');
     } catch (error) {
-      console.error('Error playing song:', error);
+      // console.error('Error playing song:', error);
     } finally {
       setIsLoading(false);
     }
@@ -214,7 +214,7 @@ const HeaderRight = () => {
               elevation: 5,
             }}>
             <TouchableOpacity
-              style={{marginVertical: theme.yard / 2}}
+              style={{marginVertical: theme.yard }}
               onPress={() => {
                 navigation.navigate('Sleep mode');
                 setMiniMenuModal(false);
@@ -224,7 +224,7 @@ const HeaderRight = () => {
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={{marginVertical: theme.yard / 2}}
+              style={{marginVertical: theme.yard }}
               onPress={() => {
                 navigation.navigate('Theme');
                 setMiniMenuModal(false);

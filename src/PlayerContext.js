@@ -102,7 +102,7 @@ export const PlayerProvider = ({ children }) => {
           await verifySongs();
         }
       } catch (error) {
-        console.error('Failed to load player data:', error);
+        // console.error('Failed to load player data:', error);
         setError('Failed to load player data: ' + error.message);
       }
     };
@@ -119,7 +119,7 @@ export const PlayerProvider = ({ children }) => {
           ['currentTrackIndex', JSON.stringify(currentTrackIndex)],
         ]);
       } catch (error) {
-        console.error('Failed to save player data:', error);
+        // console.error('Failed to save player data:', error);
         setError('Failed to save player data: ' + error.message);
       }
     };
@@ -132,7 +132,7 @@ export const PlayerProvider = ({ children }) => {
       await TrackPlayer.seekTo(position);
       return true;
     } catch (error) {
-      console.error('Error seeking to position:', error);
+      // console.error('Error seeking to position:', error);
       setError('Error seeking to position: ' + error.message);
       return false;
     }
@@ -143,7 +143,7 @@ export const PlayerProvider = ({ children }) => {
       const playerState = await TrackPlayer.getState().catch(() => null);
       
       if (playerState !== null) {
-        console.log('Player is already initialized');
+        // console.log('Player is already initialized');
         setIsPlayerReady(true);
         return;
       }
@@ -189,7 +189,7 @@ export const PlayerProvider = ({ children }) => {
       
       setIsPlayerReady(true);
     } catch (error) {
-      console.error('Failed to setup player:', error);
+      // console.error('Failed to setup player:', error);
       setError('Failed to setup player: ' + error.message);
     }
   };
@@ -200,11 +200,11 @@ export const PlayerProvider = ({ children }) => {
     }
   
     try {
-      console.log('Requesting storage permission...');
+      // console.log('Requesting storage permission...');
       let grantedPermissions = {};
   
       if (Platform.Version >= 33) { 
-        console.log('Requesting media permissions for Android 13+');
+        // console.log('Requesting media permissions for Android 13+');
         grantedPermissions = await PermissionsAndroid.requestMultiple([
           PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES,
           PermissionsAndroid.PERMISSIONS.READ_MEDIA_VIDEO,
@@ -216,14 +216,14 @@ export const PlayerProvider = ({ children }) => {
           grantedPermissions['android.permission.READ_MEDIA_VIDEO'] === PermissionsAndroid.RESULTS.GRANTED &&
           grantedPermissions['android.permission.READ_MEDIA_AUDIO'] === PermissionsAndroid.RESULTS.GRANTED
         ) {
-          console.log('All media permissions granted');
+          // console.log('All media permissions granted');
           return true;
         } else {
-          console.log('One or more media permissions denied');
+          // console.log('One or more media permissions denied');
           return false;
         }
       } else { 
-        console.log('Requesting READ_EXTERNAL_STORAGE permission for Android 10-12');
+        // console.log('Requesting READ_EXTERNAL_STORAGE permission for Android 10-12');
         const granted = await PermissionsAndroid.request(
           PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
           {
@@ -235,15 +235,15 @@ export const PlayerProvider = ({ children }) => {
           }
         );
         if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-          console.log('Storage permission granted');
+          // console.log('Storage permission granted');
           return true;
         } else {
-          console.log('Storage permission denied');
+          // console.log('Storage permission denied');
           return false;
         }
       }
     } catch (err) {
-      console.warn('Error requesting storage permission:', err);
+      // console.warn('Error requesting storage permission:', err);
       return false;
     }
   };
@@ -251,59 +251,24 @@ export const PlayerProvider = ({ children }) => {
 
   const findAudioFiles = async (dirPath, foundFiles = []) => {
   try {
+    // console.log(`Reading directory: ${dirPath}`);
     const files = await RNFS.readDir(dirPath);
     setScannedFolders(prev => prev + 1);
-
-    // Skip known recording directories
-    const skipDirs = [
-      'Android/data',
-      'Android/obb',
-      'DCIM/.thumbnails',
-      'Call',
-      'CallRecordings',
-      'Recordings',
-      'Voice Recorder',
-      'Recorder',
-      'WhatsApp',
-      'WhatsApp Audio',
-      'WhatsApp Media',
-      'WhatsApp Voice Notes',
-      'Notifications',
-      'Ringtones',
-      'Alarms',
-      'Audio/Recordings'
-    ];
 
     for (const file of files) {
       if (file.name.startsWith('.')) continue;
 
       if (file.isDirectory()) {
-        if (skipDirs.some(dir => file.path.includes(dir))) continue;
         await findAudioFiles(file.path, foundFiles);
       } else {
         const ext = file.name.split('.').pop().toLowerCase();
         const supportedFormats = [
-          'mp3',
-          'wav',
-          'aac',
-          'm4a',
-          'flac',
-          'ogg',
-          'opus',
-          'opec',
-          'oga',
-          'wma',
-          'alac',
-          'aiff',
+          'mp3', 'wav', 'aac', 'm4a', 'flac', 'ogg', 'opus',
+          'opec', 'oga', 'wma', 'alac', 'aiff'
         ];
 
         if (supportedFormats.includes(ext)) {
-          // Skip very small files (likely not actual songs)
-          if (file.size < 100 * 1024) { // Skip files smaller than 100KB
-            continue;
-          }
-
-          // For supported formats, we'll add them now and verify duration later
+          // console.log(`Found audio file: ${file.path}`);
           foundFiles.push(file);
           setTotalFiles(prev => prev + 1);
         }
@@ -312,12 +277,68 @@ export const PlayerProvider = ({ children }) => {
 
     return foundFiles;
   } catch (err) {
-    console.warn(`Error reading directory ${dirPath}:`, err);
+    // console.warn(`Error reading directory ${dirPath}:`, err);
     return foundFiles;
   }
 };
 
- const scanDeviceForMusic = async () => {
+const AUDIO_EXTENSIONS = [
+  'mp3', 'wav', 'aac', 'm4a', 'flac', 'ogg', 'opus',
+  'opec', 'oga', 'wma', 'alac', 'aiff'
+];
+
+const findAudioFilesRecursive = async (dirPath, foundFiles = []) => {
+  try {
+    const exists = await RNFS.exists(dirPath);
+    if (!exists) {
+      // console.log(`Directory does not exist, skipping: ${dirPath}`);
+      return foundFiles;
+    }
+
+    const files = await RNFS.readDir(dirPath);
+    setScannedFolders(prev => prev + 1);
+
+    for (const file of files) {
+      if (file.name.startsWith('.')) continue; // skip hidden files/folders
+
+      if (file.isDirectory()) {
+        await findAudioFilesRecursive(file.path, foundFiles);
+      } else {
+        const ext = file.name.split('.').pop().toLowerCase();
+        if (AUDIO_EXTENSIONS.includes(ext)) {
+          foundFiles.push(file);
+          setTotalFiles(prev => prev + 1);
+        }
+      }
+    }
+  } catch (err) {
+    // console.warn(`Error reading directory ${dirPath}:`, err);
+  }
+  return foundFiles;
+};
+
+const getExternalStorageRoots = async () => {
+  const roots = [RNFS.ExternalStorageDirectoryPath]; // primary external storage
+
+  try {
+    const extDirs = await RNFS.getAllExternalFilesDirs();
+    if (extDirs && extDirs.length > 1) {
+      for (let i = 1; i < extDirs.length; i++) {
+        const path = extDirs[i].path;
+        const rootPath = path.split('/Android')[0];
+        if (rootPath && !roots.includes(rootPath)) {
+          roots.push(rootPath);
+        }
+      }
+    }
+  } catch (e) {
+    // console.warn('Error getting external storage dirs:', e);
+  }
+
+  return roots;
+};
+
+const scanDeviceForMusic = async () => {
   if (!(await requestStoragePermission())) return [];
 
   setIsScanning(true);
@@ -327,87 +348,45 @@ export const PlayerProvider = ({ children }) => {
   setError(null);
 
   try {
-    let directories = [];
+    const storageRoots = await getExternalStorageRoots();
 
-    if (Platform.OS === 'android') {
-      directories = [
-        RNFS.ExternalStorageDirectoryPath + '/Music',
-        RNFS.ExternalStorageDirectoryPath + '/Download/Music',
-        RNFS.ExternalStorageDirectoryPath + '/Media/Music',
-        RNFS.ExternalStorageDirectoryPath + '/Documents/Music',
-      ];
-
-      // Only scan these additional directories if no music was found in standard locations
-      if (directories.every(dir => !RNFS.exists(dir))) {
-        directories.push(
-          RNFS.ExternalStorageDirectoryPath,
-          RNFS.ExternalStorageDirectoryPath + '/Download',
-          RNFS.ExternalStorageDirectoryPath + '/Documents'
-        );
-      }
-
-      try {
-        const extDirs = await RNFS.getAllExternalFilesDirs();
-        if (extDirs && extDirs.length > 1) {
-          for (let i = 1; i < extDirs.length; i++) {
-            const sdPath = extDirs[i].path.split('/Android')[0];
-            directories.push(sdPath + '/Music');
-          }
-        }
-      } catch (e) {
-        console.warn("Could not get external dirs:", e);
-      }
-    } else {
-      directories = [
-        RNFS.DocumentDirectoryPath + '/Music',
-        RNFS.LibraryDirectoryPath + '/Music',
-        RNFS.MusicDirectoryPath,
-      ];
+    // For each root, scan common music-related folders plus root itself
+    const rootDirs = [];
+    for (const root of storageRoots) {
+      rootDirs.push(root + '/Download');
+      rootDirs.push(root + '/Music');
+      rootDirs.push(root); // fallback to root of each storage
     }
 
-    directories = [...new Set(directories)];
-    
+    // Remove duplicates
+    const uniqueRootDirs = [...new Set(rootDirs)];
+
     let allAudioFiles = [];
-    let processedDirectories = 0;
-    const totalDirectories = directories.length;
-    
-    for (const dir of directories) {
-      try {
-        console.log(`Scanning directory: ${dir}`);
-        const filesInDir = await findAudioFiles(dir);
-        allAudioFiles = [...allAudioFiles, ...filesInDir];
-        
-        processedDirectories++;
-        setScanProgress((processedDirectories / totalDirectories) * 100);
-      } catch (e) {
-        console.warn(`Error scanning directory ${dir}:`, e);
-      }
+    let processedDirs = 0;
+    const totalDirs = uniqueRootDirs.length;
+
+    for (const rootDir of uniqueRootDirs) {
+      const files = await findAudioFilesRecursive(rootDir);
+      allAudioFiles = [...allAudioFiles, ...files];
+      processedDirs++;
+      setScanProgress((processedDirs / totalDirs) * 100);
     }
 
-    console.log(`Found ${allAudioFiles.length} audio files`);
-    
-    // Filter out duplicates and non-music files
-    const uniqueFiles = new Map();
+    // Remove duplicates by path
+    const uniqueFilesMap = new Map();
     allAudioFiles.forEach(file => {
-      if (!uniqueFiles.has(file.path)) {
-        uniqueFiles.set(file.path, file);
+      if (!uniqueFilesMap.has(file.path)) {
+        uniqueFilesMap.set(file.path, file);
       }
     });
 
+    const uniqueFiles = Array.from(uniqueFilesMap.values());
+
     const songList = [];
-    const filesArray = Array.from(uniqueFiles.values());
-    
-    for (let i = 0; i < filesArray.length; i++) {
-      const file = filesArray[i];
+    for (let i = 0; i < uniqueFiles.length; i++) {
+      const file = uniqueFiles[i];
       try {
-        // Skip files that are likely recordings
-        if (isLikelyRecording(file)) {
-          continue;
-        }
-
         const uniqueId = file.path.replace(/[^a-zA-Z0-9]/g, '_');
-
-        // Get basic metadata
         const nameWithoutExt = file.name.replace(/\.[^/.]+$/, '');
         const parts = nameWithoutExt.split(' - ');
         const hasArtistAndTitle = parts.length >= 2 && parts[1].trim();
@@ -415,130 +394,45 @@ export const PlayerProvider = ({ children }) => {
         const title = hasArtistAndTitle ? parts[1].trim() : nameWithoutExt;
         const artist = hasArtistAndTitle ? parts[0].trim() : 'Unknown Artist';
 
-        // Skip files with common recording patterns in their names
-        if (isRecordingFileName(title)) {
-          continue;
-        }
-
-        // Get duration (you'll need to implement getAudioDuration)
         let duration = 0;
         try {
           duration = await getAudioDuration(file.path);
-          // Skip files shorter than 30 seconds
-          if (duration > 0 && duration < 30) {
-            continue;
-          }
         } catch (e) {
-          console.warn(`Couldn't get duration for ${file.name}:`, e);
+          // console.warn(`Couldn't get duration for ${file.name}:`, e);
         }
 
-        // Get artwork
-        let artwork = null;
-        try {
-          const coverPath = file.path.replace(/\.[^/.]+$/, '.jpg');
-          const coverExists = await RNFS.exists(coverPath);
-          if (coverExists) {
-            artwork = Platform.OS === 'android' ? `file://${coverPath}` : coverPath;
-          } else {
-            const pngPath = file.path.replace(/\.[^/.]+$/, '.png');
-            const pngExists = await RNFS.exists(pngPath);
-            if (pngExists) {
-              artwork = Platform.OS === 'android' ? `file://${pngPath}` : pngPath;
-            } else {
-              const dirPath = file.path.substring(0, file.path.lastIndexOf('/'));
-              const dirFiles = await RNFS.readDir(dirPath);
-              const coverFile = dirFiles.find(f => 
-                f.name.toLowerCase().includes('cover') || 
-                f.name.toLowerCase().includes('album') ||
-                f.name.toLowerCase().includes('artwork') ||
-                f.name.toLowerCase() === 'folder.jpg'
-              );
-              if (coverFile) {
-                artwork = Platform.OS === 'android' ? `file://${coverFile.path}` : coverFile.path;
-              }
-            }
-          }
-        } catch (e) {
-          console.warn(`Error getting artwork for ${file.name}:`, e);
-        }
+        // Artwork fetching logic can be added here if needed
+        const artwork = null;
 
         songList.push({
           id: uniqueId,
           url: Platform.OS === 'android' ? `file://${file.path}` : file.path,
-          title: title,
-          artist: artist,
-          artwork: artwork,
-          duration: duration,  
+          title,
+          artist,
+          artwork,
+          duration,
           size: (file.size / (1024 * 1024)).toFixed(2) + ' MB',
           date: file.mtime ? file.mtime.toISOString() : new Date().toISOString(),
         });
 
-        // Update progress
-        setScanProgress(((processedDirectories / totalDirectories) * 50) + 
-                       ((i / filesArray.length) * 50));
+        setScanProgress(((processedDirs / totalDirs) * 50) + ((i / uniqueFiles.length) * 50));
       } catch (e) {
-        console.warn(`Error processing file ${file.name}:`, e);
+        // console.warn(`Error processing file ${file.name}:`, e);
       }
     }
 
-    console.log(`Processed ${songList.length} music files`);
-    
-    setPlaylists(prev => prev.map(playlist => 
-      playlist.id === '0' 
-        ? { ...playlist, data: songList } 
-        : playlist
+    setPlaylists(prev => prev.map(pl =>
+      pl.id === '0' ? { ...pl, data: songList } : pl
     ));
 
     return songList;
   } catch (error) {
-    console.error('Failed to scan device:', error);
+    // console.error('Failed to scan device:', error);
     setError('Failed to scan device: ' + error.message);
     return [];
   } finally {
     setIsScanning(false);
   }
-};
-
-// Helper functions
-const isLikelyRecording = (file) => {
-  const recordingPaths = [
-    '/Call',
-    '/CallRecordings',
-    '/Recordings',
-    '/Voice Recorder',
-    '/Recorder',
-    '/WhatsApp',
-    '/WhatsApp Audio',
-    '/WhatsApp Media',
-    '/WhatsApp Voice Notes',
-    '/Notifications',
-    '/Ringtones',
-    '/Alarms',
-    '/Audio/Recordings'
-  ];
-
-  return recordingPaths.some(path => file.path.includes(path));
-};
-
-const isRecordingFileName = (filename) => {
-  const recordingPatterns = [
-    /^Recording/i,
-    /^Voice Note/i,
-    /^Call/i,
-    /^Memo/i,
-    /^\d{8}_\d{6}/, // Dates like 20230101_120000
-    /^[A-Z]{2}_\d+/ // Patterns like WA_1234
-  ];
-
-  return recordingPatterns.some(pattern => pattern.test(filename));
-};
-
-// You'll need to implement this using a native module
-const getAudioDuration = async (filePath) => {
-  // Implement this using a native module
-  // For Android: MediaMetadataRetriever
-  // For iOS: AVFoundation
-  return 0; // Return 0 if you can't get duration
 };
 
   const verifySongs = async () => {
@@ -564,11 +458,11 @@ const getAudioDuration = async (filePath) => {
           processedSongs++;
           setScanProgress((processedSongs / totalSongs) * 100);
         } catch (e) {
-          console.warn(`Error verifying song ${song.title}:`, e);
+          // console.warn(`Error verifying song ${song.title}:`, e);
         }
       }
     
-      console.log(`Verified ${verifiedSongs.length}/${totalSongs} songs`);
+      // console.log(`Verified ${verifiedSongs.length}/${totalSongs} songs`);
       
       if (verifiedSongs.length !== allPlaylist.data.length) {
         setPlaylists(prev => prev.map(playlist => 
@@ -584,7 +478,7 @@ const getAudioDuration = async (filePath) => {
     
       return verifiedSongs;
     } catch (error) {
-      console.error('Failed to verify songs:', error);
+      // console.error('Failed to verify songs:', error);
       setError('Failed to verify songs: ' + error.message);
       return [];
     } finally {
@@ -760,7 +654,7 @@ const addToPlaylist = (playlistId, songIds) => {
       await TrackPlayer.play();
       return true;
     } catch (error) {
-      console.error('Error playing track:', error);
+      // console.error('Error playing track:', error);
       setError('Error playing track: ' + error.message);
       return false;
     }
@@ -828,7 +722,7 @@ const addToPlaylist = (playlistId, songIds) => {
       await TrackPlayer.setRepeatMode(modes[nextIndex]);
       return true;
     } catch (error) {
-      console.error('Error setting repeat mode:', error);
+      // console.error('Error setting repeat mode:', error);
       setError('Error setting repeat mode: ' + error.message);
       return false;
     }
@@ -850,7 +744,7 @@ const addToPlaylist = (playlistId, songIds) => {
       
       return true;
     } catch (error) {
-      console.error('Error setting shuffle mode:', error);
+      // console.error('Error setting shuffle mode:', error);
       setError('Error setting shuffle mode: ' + error.message);
       return false;
     }
@@ -897,7 +791,7 @@ const addToPlaylist = (playlistId, songIds) => {
     setError(null);
   };
 
-  console.warn(playlists)
+  // console.warn(playlists)
   const value = {
     isPlayerReady,
     isScanning,

@@ -76,7 +76,7 @@ const Songs = () => {
       setCurrentTrackId(currentSongs[index].id);
 
     } catch (error) {
-      console.error('Error playing song:', error);
+      // console.error('Error playing song:', error);
     }
   };
 

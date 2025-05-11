@@ -40,7 +40,7 @@ const MiniPlayer = () => {
       if (index !== null) {
         setCurrentTrackIndex(index);
         const track = await TrackPlayer.getTrack(index);
-        console.log("Current track data:", JSON.stringify(track));
+        // console.log("Current track data:", JSON.stringify(track));
         
         if (track) {
           setTrackDetails({
@@ -55,7 +55,7 @@ const MiniPlayer = () => {
         }
       }
     } catch (error) {
-      console.log('Error fetching track details:', error);
+      // console.log('Error fetching track details:', error);
       setTrackDetails({
         title: 'Unknown',
         artist: 'Unknown',
@@ -69,7 +69,7 @@ const MiniPlayer = () => {
       setIsPlaying(state === State.Playing);
       await fetchTrackDetails();
     } catch (error) {
-      console.log('Error updating playback state:', error);
+      // console.log('Error updating playback state:', error);
     }
   }, [fetchTrackDetails]);
 
@@ -78,7 +78,7 @@ const MiniPlayer = () => {
   }, [playbackState, updatePlaybackState]);
 
   useTrackPlayerEvents([Event.PlaybackActiveTrackChanged, Event.PlaybackState], async (event) => {
-    console.log("Track player event:", event.type);
+    // console.log("Track player event:", event.type);
     await fetchTrackDetails();
     updatePlaybackState();
   });
@@ -87,12 +87,12 @@ const MiniPlayer = () => {
     const updateQueue = async () => {
       try {
         const tracks = await TrackPlayer.getQueue();
-        console.log(`Queue updated: ${tracks.length} tracks`);
+        // console.log(`Queue updated: ${tracks.length} tracks`);
         setQueue(tracks);
         await fetchTrackDetails();
         await updatePlaybackState();
       } catch (error) {
-        console.log('Error updating queue:', error);
+        // console.log('Error updating queue:', error);
       }
     };
 
@@ -108,7 +108,7 @@ const MiniPlayer = () => {
         sliderMax.value = duration || 1;
         await updatePlaybackState();
       } catch (error) {
-        console.log('Error updating progress:', error);
+        // console.log('Error updating progress:', error);
       }
     };
 
@@ -128,7 +128,7 @@ const MiniPlayer = () => {
         setTimeout(fetchTrackDetails, 300);
       }
     } catch (error) {
-      console.log('Error toggling playback:', error);
+      // console.log('Error toggling playback:', error);
     }
   };
 
@@ -139,7 +139,7 @@ const MiniPlayer = () => {
       setIsPlaying(true);
       setTimeout(fetchTrackDetails, 300);
     } catch (error) {
-      console.log('Error skipping to next:', error);
+      // console.log('Error skipping to next:', error);
     }
   };
 
@@ -161,7 +161,7 @@ const MiniPlayer = () => {
       
       setTimeout(fetchTrackDetails, 300);
     } catch (error) {
-      console.log('Error skipping to index:', error);
+      // console.log('Error skipping to index:', error);
     }
   };
 
@@ -223,14 +223,14 @@ const MiniPlayer = () => {
   useEffect(() => {
     const setupPlayer = async () => {
       try {
-        console.log("Setting up the player...");
+        // console.log("Setting up the player...");
         const state = await TrackPlayer.getState();
-        console.log("Initial player state:", state);
+        // console.log("Initial player state:", state);
         if (state !== State.None) {
           await fetchTrackDetails();
         }
       } catch (error) {
-        console.log("Player setup error:", error);
+        // console.log("Player setup error:", error);
       }
     };
     
@@ -256,7 +256,7 @@ const MiniPlayer = () => {
           try {
             await TrackPlayer.seekTo(value);
           } catch (error) {
-            console.log("Error seeking:", error);
+            // console.log("Error seeking:", error);
           }
         }}
       />

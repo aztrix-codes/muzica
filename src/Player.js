@@ -83,7 +83,7 @@ const Player = () => {
           setShuffleMode(savedShuffleMode === 'true');
         }
       } catch (error) {
-        console.error('Failed to load player settings:', error);
+        // console.error('Failed to load player settings:', error);
       }
     };
     
@@ -150,7 +150,7 @@ const Player = () => {
         setPlaying(true);
       }
     } catch (e) {
-      console.warn('Error skipping to next track:', e);
+      // console.warn('Error skipping to next track:', e);
     }
   };
   
@@ -171,7 +171,7 @@ const Player = () => {
         setPlaying(true);
       }
     } catch (e) {
-      console.warn('Error skipping to previous track:', e);
+      // console.warn('Error skipping to previous track:', e);
     }
   };
 
@@ -195,7 +195,7 @@ const Player = () => {
     try {
       await AsyncStorage.setItem(REPEAT_MODE_STORAGE_KEY, newMode.toString());
     } catch (error) {
-      console.error('Failed to save repeat mode:', error);
+      // console.error('Failed to save repeat mode:', error);
     }
   };
 
@@ -208,7 +208,7 @@ const Player = () => {
       try {
         await AsyncStorage.setItem(REPEAT_MODE_STORAGE_KEY, RepeatMode.Off.toString());
       } catch (error) {
-        console.error('Failed to save repeat mode:', error);
+        // console.error('Failed to save repeat mode:', error);
       }
     }
     
@@ -217,7 +217,7 @@ const Player = () => {
     try {
       await AsyncStorage.setItem(SHUFFLE_MODE_STORAGE_KEY, newShuffleMode.toString());
     } catch (error) {
-      console.error('Failed to save shuffle mode:', error);
+      // console.error('Failed to save shuffle mode:', error);
     }
   };
 
@@ -235,7 +235,7 @@ const Player = () => {
       setCurrentIndex(index);
       setShowPlaylistModal(false);
     } catch (err) {
-      console.error(err);
+      // console.error(err);
     }
   };
 

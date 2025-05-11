@@ -113,7 +113,7 @@ const Playlist = ({ route, navigation }) => {
 
       setCurrentTrackId(currentSongs[index].id);
     } catch (error) {
-      console.error('Error playing song:', error);
+      // console.error('Error playing song:', error);
     }
   };
 
@@ -184,7 +184,7 @@ const Playlist = ({ route, navigation }) => {
         setModalVisible(false);
       }
     } catch (error) {
-      console.error('Failed to add songs:', error);
+      // console.error('Failed to add songs:', error);
     }
   };
 

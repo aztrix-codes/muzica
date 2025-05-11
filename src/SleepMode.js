@@ -78,7 +78,7 @@ const SleepMode = () => {
           }
         }
       } catch (error) {
-        console.error('Failed to load timer:', error);
+        // console.error('Failed to load timer:', error);
       }
     };
 
@@ -231,7 +231,7 @@ const SleepMode = () => {
         timerCompleted: completed
       }));
     } catch (error) {
-      console.error('Failed to save timer:', error);
+      // console.error('Failed to save timer:', error);
     }
   };
 

@@ -35,7 +35,7 @@ module.exports = async function () {
         }
       }
     } catch (error) {
-      console.error('Error handling remote next:', error);
+      // console.error('Error handling remote next:', error);
     }
   });
 
@@ -61,7 +61,7 @@ module.exports = async function () {
         }
       }
     } catch (error) {
-      console.error('Error handling remote previous:', error);
+      // console.error('Error handling remote previous:', error);
     }
   });
 
@@ -72,7 +72,7 @@ module.exports = async function () {
         await TrackPlayer.seekTo(event.position);
       }
     } catch (error) {
-      console.error('Error handling remote seek:', error);
+      // console.error('Error handling remote seek:', error);
     }
   });
 
@@ -81,7 +81,7 @@ module.exports = async function () {
     try {
       await TrackPlayer.reset();
     } catch (error) {
-      console.error('Error handling remote stop:', error);
+      // console.error('Error handling remote stop:', error);
     }
   });
 
@@ -92,7 +92,7 @@ module.exports = async function () {
       const jumpAmount = event.interval || 10;
       await TrackPlayer.seekTo(position + jumpAmount);
     } catch (error) {
-      console.error('Error handling jump forward:', error);
+      // console.error('Error handling jump forward:', error);
     }
   });
 
@@ -104,7 +104,7 @@ module.exports = async function () {
       const newPosition = Math.max(0, position - jumpAmount);
       await TrackPlayer.seekTo(newPosition);
     } catch (error) {
-      console.error('Error handling jump backward:', error);
+      // console.error('Error handling jump backward:', error);
     }
   });
 };

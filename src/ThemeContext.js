@@ -824,7 +824,7 @@ export const ThemeProvider = ({ children }) => {
           setCurrentTheme(mergedThemes[Object.keys(mergedThemes)[0]]);
         }
       } catch (error) {
-        console.error('Failed to load theme:', error);
+        // console.error('Failed to load theme:', error);
         setCurrentTheme(themes[Object.keys(themes)[0]]);
       } finally {
         setIsLoading(false);
@@ -841,7 +841,7 @@ export const ThemeProvider = ({ children }) => {
           await AsyncStorage.setItem('currentTheme', JSON.stringify(currentTheme));
         }
       } catch (error) {
-        console.error('Failed to save theme:', error);
+        // console.error('Failed to save theme:', error);
       }
     };
 
@@ -861,7 +861,7 @@ export const ThemeProvider = ({ children }) => {
       
       await AsyncStorage.setItem('customThemes', JSON.stringify(customThemesObj));
     } catch (error) {
-      console.error('Failed to save custom themes:', error);
+      // console.error('Failed to save custom themes:', error);
     }
   };
 

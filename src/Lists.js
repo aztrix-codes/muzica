@@ -163,7 +163,7 @@ const Lists = () => {
             borderRadius: theme.yard * 4,
             justifyContent: 'center',
             alignItems: 'center',
-            backgroundColor: theme.colors.accent,
+            backgroundColor: theme.colors.accent, marginRight: theme.yard / 2
           }}
           onPress={handleCreatePlaylist}
         >

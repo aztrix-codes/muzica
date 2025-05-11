@@ -7,6 +7,10 @@ import {
   Modal,
   TextInput,
   ToastAndroid,
+  KeyboardAvoidingView,
+  Platform,
+  Keyboard,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import { useTheme } from './ThemeContext';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -165,8 +169,47 @@ const Theme = () => {
 
   const [customThemeData, setCustomThemeData] = useState(themes['0']);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [inputValue, setInputValue] = useState('');
+  const [colorInputValue, setColorInputValue] = useState('');
+  
+
+  const openColorPicker = (type, currentValue) => {
+    setCurrentEditingColor({
+      type,
+      value: currentValue,
+    });
+    setColorInputValue(currentValue);
+    setInputValue(currentValue); 
+    setShowColorPicker(true);
+  };
 
   const handleColorSelect = color => {
+    setColorInputValue(color);
+    setInputValue(color); 
+  };
+
+  const handleColorSubmit = () => {
+    if (isValidHexColor(inputValue)) {
+      setColorInputValue(inputValue);
+      updateColorInTheme(inputValue);
+    }
+  };
+
+  const handleInputChange = (field, value) => {
+    setCustomThemeData({
+      ...customThemeData,
+      [field]: value,
+    });
+    setHasUnsavedChanges(true);
+  };
+
+  const isValidHexColor = (hex) => {
+    return /^#([0-9A-F]{3}){1,2}$/i.test(hex);
+  };
+
+
+
+  const updateColorInTheme = (color) => {
     const [section, key] = currentEditingColor.type.split('.');
     
     setCustomThemeData(prevData => {
@@ -187,22 +230,6 @@ const Theme = () => {
     setHasUnsavedChanges(true);
   };
 
-  const openColorPicker = (type, currentValue) => {
-    setCurrentEditingColor({
-      type,
-      value: currentValue,
-    });
-    setShowColorPicker(true);
-  };
-
-  const handleInputChange = (field, value) => {
-    setCustomThemeData({
-      ...customThemeData,
-      [field]: value,
-    });
-    setHasUnsavedChanges(true);
-  };
-
   const saveCustomTheme = () => {
     updateCustomTheme('0', customThemeData);
     setShowCustomModal(false);
@@ -213,6 +240,7 @@ const Theme = () => {
   const applyTheme = () => {
     changeTheme('0');
     ToastAndroid.show('Custom theme applied!', ToastAndroid.SHORT);
+    setShowCustomModal(false)
   };
 
   const resetCustomTheme = () => {
@@ -238,6 +266,13 @@ const Theme = () => {
     const [section, key] = path.split('.');
     return obj && obj[section] && obj[section][key] ? obj[section][key] : '';
   };
+
+  useEffect(() => {
+    if (showColorPicker) {
+      const currentColor = getNestedColorValue(customThemeData, currentEditingColor.type);
+      setColorInputValue(currentColor);
+    }
+  }, [showColorPicker]);
 
   return (
     <View style={{ 
@@ -519,90 +554,169 @@ const Theme = () => {
         </Modal>
 
         <Modal
-          animationType="slide"
-          transparent={true}
-          visible={showColorPicker}
-          onRequestClose={() => setShowColorPicker(false)}>
+            animationType="slide"
+            transparent={true}
+            visible={showColorPicker}
+            onRequestClose={() => setShowColorPicker(false)}>
             <BlurView
-            style={{ position: "absolute", top: 0, left: 0, bottom: 0, right: 0 }}
+              style={{ position: "absolute", top: 0, left: 0, bottom: 0, right: 0 }}
               blurType="dark"
               blurAmount={10}
             />
-          <View style={{ 
-            flex: 1,
-            justifyContent: 'center',
-            alignItems: 'center',
-          }}>
-            <View style={{ 
-              width: '90%',
-              borderRadius: yard,
-              padding: yard * 1.5,
-              backgroundColor: colors.bgPrimary,
-            }}>
-              <Text style={{ 
-                color: colors.tPrimary,
-                fontSize: fontSizes.l,
-                fontWeight: 'bold',
-                marginBottom: yard,
-              }}>
-                Select Color
-              </Text>
-
-              <View style={{ height: 250, width: '100%' }}>
-                <ColorPicker
-                  color={currentEditingColor.value}
-                  onColorChange={handleColorSelect}
-                  thumbSize={40}
-                  sliderSize={20}
-                  noSnap={true}
-                  row={false}
-                />
-              </View>
-
-              <View style={{ 
-                alignItems: 'center',
-                marginTop: yard * 5,
-              }}>
+            <KeyboardAvoidingView 
+              behavior={Platform.OS === "ios" ? "padding" : "height"}
+              style={{ flex: 1 }}
+            >
+              <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                 <View style={{ 
-                  width: yard * 3,
-                  height: yard * 3,
-                  borderRadius: yard * 1.5,
-                  borderWidth: yard * 0.1,
-                  borderColor: '#E0E0E0',
-                  backgroundColor: getNestedColorValue(customThemeData, currentEditingColor.type),
-                }} />
-                <Text style={{ 
-                  color: colors.tPrimary,
-                  fontSize: fontSizes.m,
-                  marginTop: yard / 2,
-                }}>
-                  {getNestedColorValue(customThemeData, currentEditingColor.type).toUpperCase()}
-                </Text>
-              </View>
-
-              <TouchableOpacity
-                style={{ 
-                  paddingVertical: yard,
-                  paddingHorizontal: yard * 1.5,
-                  borderRadius: yard,
-                  alignItems: 'center',
+                  flex: 1,
                   justifyContent: 'center',
-                  backgroundColor: colors.accent,
-                  marginTop: yard * 1.5,
-                  alignSelf: 'center',
-                }}
-                onPress={() => setShowColorPicker(false)}>
-                <Text style={{ 
-                  color: '#FFFFFF',
-                  fontSize: fontSizes.m,
-                  fontWeight: 'bold',
+                  alignItems: 'center',
                 }}>
-                  Done
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </Modal>
+                  <View style={{ 
+                    width: '90%',
+                    borderRadius: yard * 2,
+                    padding: yard * 2,
+                    backgroundColor: colors.bgPrimary,
+                    maxHeight: '80%',
+                    elevation: 5,
+                  }}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: yard }}>
+                      <Text style={{ 
+                        color: colors.tPrimary,
+                        fontSize: fontSizes.l,
+                        fontWeight: 'bold',
+                      }}>
+                        Pick Color
+                      </Text>
+                      <TouchableOpacity onPress={() => setShowColorPicker(false)}>
+                        <Ionicons name="close" size={yard * 2} color={colors.tSecondary} />
+                      </TouchableOpacity>
+                    </View>
+
+                    <View style={{ 
+                      flexDirection: 'row', 
+                      height: 200,
+                      marginBottom: yard * 1.5,
+                    }}>
+                      <View style={{ flex: 1 }}>
+                        <ColorPicker
+                          color={colorInputValue}
+                          onColorChange={handleColorSelect}
+                          thumbSize={20}
+                          sliderSize={25}
+                          row={true}
+                          swatches={false}
+                        />
+                      </View>
+                    </View>
+
+                    <View style={{ 
+                      flexDirection: 'row', 
+                      alignItems: 'center',
+                      backgroundColor: colors.bgSecondary,
+                      borderRadius: yard,
+                      paddingHorizontal: yard,
+                      marginBottom: yard * 1.5,
+                    }}>
+                      <View style={{
+                        width: yard * 2,
+                        height: yard * 2,
+                        borderRadius: yard / 2,
+                        backgroundColor: colorInputValue,
+                        marginRight: yard,
+                        borderWidth: 1,
+                        borderColor: colors.tSecondary + '30',
+                      }}/>
+                      <TextInput
+                        style={{ 
+                          flex: 1,
+                          color: colors.tPrimary,
+                          fontSize: fontSizes.m,
+                          paddingVertical: yard,
+                        }}
+                        value={inputValue}
+                        onChangeText={setInputValue}
+                        onSubmitEditing={handleColorSubmit}
+                        autoCapitalize="characters"
+                        placeholder="#FFFFFF"
+                        placeholderTextColor={colors.tSecondary}
+                        selectTextOnFocus={true}
+                      />
+                      <TouchableOpacity
+                        onPress={handleColorSubmit}
+                        style={{
+                          padding: yard / 2,
+                          borderRadius: yard / 2,
+                          backgroundColor: colors.accent,
+                          opacity: isValidHexColor(inputValue) ? 1 : 0.5,
+                        }}
+                        disabled={!isValidHexColor(inputValue)}
+                      >
+                        <Ionicons
+                          name="checkmark"
+                          size={yard * 1.5}
+                          color="#FFFFFF"
+                        />
+                      </TouchableOpacity>
+                    </View>
+
+                    <View style={{ 
+                      flexDirection: 'row',
+                      justifyContent: 'space-between',
+                    }}>
+                      <TouchableOpacity
+                        style={{ 
+                          flex: 1,
+                          padding: yard,
+                          borderRadius: yard,
+                          backgroundColor: colors.bgSecondary,
+                          marginRight: yard / 2,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                        onPress={() => {
+                          setShowColorPicker(false);
+                        }}>
+                        <Text style={{ 
+                          color: colors.tPrimary,
+                          fontSize: fontSizes.m,
+                          fontWeight: '500',
+                        }}>
+                          Cancel
+                        </Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={{ 
+                          flex: 1,
+                          padding: yard,
+                          borderRadius: yard,
+                          backgroundColor: colors.accent,
+                          marginLeft: yard / 2,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                        onPress={() => {
+                          if (isValidHexColor(inputValue)) {
+                            handleColorSubmit();
+                          }
+                          setShowColorPicker(false);
+                        }}>
+                        <Text style={{ 
+                          color: '#FFFFFF',
+                          fontSize: fontSizes.m,
+                          fontWeight: 'bold',
+                        }}>
+                          Apply
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </View>
+              </TouchableWithoutFeedback>
+            </KeyboardAvoidingView>
+          </Modal>
       </ScrollView>
     </View>
   );
