@@ -133,7 +133,6 @@ const HeaderRight = () => {
         animationType="fade"
         visible={searchModal}
         onRequestClose={() => setSearchModal(false)}>
-
         <View
           style={{
             flex: 1,
